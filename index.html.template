@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="theme-color" content="#090d1c">
+    <title>ArtCraft Apps</title>
+    <style>
+        :root {
+            color-scheme: dark;
+            --page: #090d1c;
+            --surface: #121a2d;
+            --surface-hover: #19243a;
+            --text: #f3f5ff;
+            --muted: #9aa8c2;
+            --line: #293650;
+            --cyan: #62ddff;
+            --violet: #bb83ff;
+            --control: rgba(18, 26, 45, .92);
+            --control-text: #acb7cb;
+            --button-text: #dce5f7;
+        }
+
+        :root[data-theme="light"] {
+            color-scheme: light;
+            --page: #f3f6fc;
+            --surface: #ffffff;
+            --surface-hover: #f7faff;
+            --text: #172033;
+            --muted: #5f6e85;
+            --line: #d6deeb;
+            --cyan: #087da5;
+            --violet: #7850b5;
+            --control: rgba(255, 255, 255, .96);
+            --control-text: #53627a;
+            --button-text: #24334d;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            min-width: 320px;
+            margin: 0;
+            background:
+                radial-gradient(ellipse at 50% -18%, rgba(80, 103, 206, .16), transparent 38rem),
+                var(--page);
+            color: var(--text);
+            font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            line-height: 1.5;
+        }
+
+        a {
+            color: inherit;
+        }
+
+        .shell {
+            width: min(1120px, calc(100% - 40px));
+            margin-inline: auto;
+        }
+
+        .topbar {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 22px 0;
+            border-bottom: 1px solid rgba(164, 185, 225, .12);
+        }
+
+        .brand {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            font-weight: 750;
+            letter-spacing: .02em;
+            text-decoration: none;
+        }
+
+        .brand-mark {
+            display: grid;
+            width: 32px;
+            height: 32px;
+            place-items: center;
+            border-radius: 10px;
+            background: linear-gradient(135deg, var(--cyan), var(--violet));
+            color: #10152a;
+            font-weight: 900;
+        }
+
+        .top-link {
+            color: var(--muted);
+            font-size: .88rem;
+            text-decoration: none;
+        }
+
+        .top-link:hover {
+            color: var(--text);
+        }
+
+        .top-actions {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .theme-toggle {
+            display: grid;
+            width: 38px;
+            height: 38px;
+            place-items: center;
+            border: 1px solid var(--line);
+            border-radius: 12px;
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer;
+        }
+
+        .theme-toggle:hover {
+            border-color: var(--cyan);
+        }
+
+        .theme-toggle svg {
+            width: 18px;
+            height: 18px;
+        }
+
+        .theme-toggle .sun-icon,
+        :root[data-theme="light"] .theme-toggle .moon-icon {
+            display: none;
+        }
+
+        :root[data-theme="light"] .theme-toggle .sun-icon {
+            display: block;
+        }
+
+        main {
+            padding: 40px 0 64px;
+        }
+
+        .page-title {
+            margin: 0;
+            background: linear-gradient(100deg, #72e5ff 10%, #a9a0ff 52%, #e090ff 90%);
+            background-clip: text;
+            color: transparent;
+            font-size: clamp(2.5rem, 7vw, 4.2rem);
+            font-weight: 800;
+            letter-spacing: -.06em;
+            line-height: 1.08;
+            text-align: center;
+            -webkit-background-clip: text;
+        }
+
+        .intro {
+            max-width: 640px;
+            margin: 13px auto 28px;
+            color: var(--muted);
+            text-align: center;
+        }
+
+        .search-wrap {
+            position: relative;
+            width: min(100%, 560px);
+            margin: 0 auto 17px;
+        }
+
+        .search-icon {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            width: 17px;
+            height: 17px;
+            color: #8795af;
+            pointer-events: none;
+            transform: translateY(-50%);
+        }
+
+        .search {
+            width: 100%;
+            min-height: 46px;
+            padding: 0 16px 0 43px;
+            border: 1px solid #2a3550;
+            border-radius: 12px;
+            outline: none;
+            background: var(--control);
+            color: var(--text);
+            font: inherit;
+            font-size: .9rem;
+        }
+
+        .search::placeholder {
+            color: #74819a;
+        }
+
+        .search:focus {
+            border-color: #5daee0;
+            box-shadow: 0 0 0 3px rgba(98, 221, 255, .12);
+        }
+
+        .filters {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            margin: 0 0 17px;
+        }
+
+        .filter {
+            min-height: 31px;
+            padding: 4px 13px;
+            border: 1px solid #303a54;
+            border-radius: 999px;
+            background: var(--control);
+            color: var(--control-text);
+            cursor: pointer;
+            font: inherit;
+            font-size: .78rem;
+            transition: border-color .18s ease, color .18s ease, background .18s ease;
+        }
+
+        .filter:hover {
+            border-color: #667b9e;
+            color: var(--text);
+        }
+
+        .filter[aria-pressed="true"] {
+            border-color: var(--cyan);
+            background: rgba(98, 221, 255, .1);
+            box-shadow: 0 0 14px rgba(98, 221, 255, .12);
+            color: #8ae8ff;
+        }
+
+        :root[data-theme="light"] .filter[aria-pressed="true"] {
+            background: rgba(8, 125, 165, .1);
+            color: #075b74;
+        }
+
+        .results-note {
+            min-height: 1.4em;
+            margin: 0 0 13px;
+            color: #7f8da7;
+            font-size: .78rem;
+            text-align: center;
+        }
+
+        .app-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(min(100%, 176px), 1fr));
+            gap: 13px;
+        }
+
+        .app-card {
+            display: flex;
+            min-width: 0;
+            min-height: 246px;
+            flex-direction: column;
+            align-items: center;
+            padding: 17px 14px 14px;
+            border: 1px solid var(--line);
+            border-radius: 16px;
+            background:
+                radial-gradient(ellipse at 50% 0%, rgba(112, 145, 210, .12), transparent 72%),
+                var(--surface);
+            text-align: center;
+            transition: opacity .2s ease, filter .2s ease, border-color .2s ease,
+                box-shadow .2s ease, transform .2s ease, background-color .2s ease;
+        }
+
+        .app-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(98, 221, 255, .55);
+            background-color: var(--surface-hover);
+        }
+
+        .app-card.is-category-dimmed {
+            opacity: .24;
+            filter: saturate(.45);
+        }
+
+        .app-card.is-search-dimmed {
+            opacity: .34;
+            filter: saturate(.55);
+        }
+
+        .app-card.is-search-match {
+            border-color: rgba(98, 221, 255, .82);
+            box-shadow: 0 0 0 1px rgba(98, 221, 255, .22), 0 0 24px rgba(98, 221, 255, .15);
+        }
+
+        .app-card.is-category-dimmed.is-search-match {
+            opacity: .24;
+        }
+
+        .app-logo-link {
+            display: grid;
+            width: 102px;
+            height: 102px;
+            flex: 0 0 102px;
+            place-items: center;
+            overflow: hidden;
+            border: 1px solid rgba(172, 197, 242, .24);
+            border-radius: 23px;
+            background: linear-gradient(145deg, rgba(255,255,255,.1), rgba(255,255,255,.025));
+            box-shadow: 0 12px 30px rgba(0, 0, 0, .22), inset 0 1px 0 rgba(255,255,255,.08);
+            transition: transform .18s ease, box-shadow .18s ease;
+        }
+
+        .app-logo-link:hover,
+        .app-logo-link:focus-visible {
+            transform: translateY(-2px) scale(1.035);
+            box-shadow: 0 14px 34px rgba(0, 0, 0, .28), 0 0 0 3px rgba(98, 221, 255, .2);
+            outline: none;
+        }
+
+        .app-icon {
+            display: block;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .app-name {
+            margin: 12px 0 0;
+            font-size: .98rem;
+            font-weight: 730;
+            letter-spacing: -.015em;
+        }
+
+        .app-version {
+            margin-top: 1px;
+            color: var(--muted);
+            font-size: .76rem;
+        }
+
+        .app-actions {
+            display: flex;
+            width: 100%;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 13px;
+        }
+
+        .button {
+            display: inline-flex;
+            min-width: 0;
+            min-height: 34px;
+            flex: 1;
+            align-items: center;
+            justify-content: center;
+            padding: 0 8px;
+            border: 1px solid #34415e;
+            border-radius: 9px;
+            background: rgba(255,255,255,.035);
+            color: var(--button-text);
+            font-size: .76rem;
+            font-weight: 700;
+            text-decoration: none;
+            transition: border-color .18s ease, background .18s ease;
+        }
+
+        .button:hover {
+            border-color: #6d819f;
+            background: rgba(255,255,255,.09);
+        }
+
+        .button-get {
+            border-color: rgba(98, 221, 255, .38);
+            background: rgba(98, 221, 255, .1);
+            color: #8ae8ff;
+        }
+
+        .button-get:hover {
+            border-color: var(--cyan);
+            background: rgba(98, 221, 255, .17);
+        }
+
+        :root[data-theme="light"] .button-get {
+            border-color: #9acbd9;
+            background: #e4f5f9;
+            color: #075b74;
+        }
+
+        :root[data-theme="light"] .button-get:hover {
+            border-color: #53a9bf;
+            background: #d3eef4;
+        }
+
+        .promos {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            gap: 14px;
+            margin-top: 60px;
+        }
+
+        .promo {
+            position: relative;
+            min-height: 190px;
+            padding: 23px;
+            border: 1px solid var(--line);
+            border-radius: 17px;
+            background: linear-gradient(140deg, rgba(98,221,255,.1), transparent 58%), var(--surface);
+        }
+
+        .promo:nth-child(2) {
+            background: linear-gradient(140deg, rgba(187,131,255,.13), transparent 58%), var(--surface);
+        }
+
+        .promo-label {
+            margin: 0 0 8px;
+            color: #83e4ff;
+            font-size: .7rem;
+            font-weight: 750;
+            letter-spacing: .13em;
+            text-transform: uppercase;
+        }
+
+        :root[data-theme="light"] .promo-label {
+            color: #08718e;
+        }
+
+        .promo:nth-child(2) .promo-label {
+            color: #c89cff;
+        }
+
+        :root[data-theme="light"] .promo:nth-child(2) .promo-label {
+            color: #7242a5;
+        }
+
+        .promo h2 {
+            margin: 0;
+            padding-right: 92px;
+            font-size: 1.3rem;
+        }
+
+        .promo-copy {
+            max-width: 580px;
+            margin: 9px 0 14px;
+            color: var(--muted);
+            font-size: .88rem;
+        }
+
+        .promo-logo {
+            position: absolute;
+            top: 21px;
+            right: 21px;
+            width: 186px;
+            max-height: 60px;
+            object-fit: contain;
+            object-position: right center;
+        }
+
+        .promo-logo-rosetta {
+            width: 89px;
+            max-height: 42px;
+        }
+
+        /* :root[data-theme="light"] .promo-logo-rosetta {
+            filter: brightness(0);
+        } */
+
+        .promo-link {
+            color: var(--text);
+            font-size: .84rem;
+            font-weight: 700;
+            text-decoration-color: var(--cyan);
+            text-underline-offset: 4px;
+        }
+
+        footer {
+            padding: 20px 0 28px;
+            border-top: 1px solid rgba(164, 185, 225, .12);
+            color: #8390a9;
+            font-size: .8rem;
+        }
+
+        @media (max-width: 620px) {
+            .shell {
+                width: min(100% - 28px, 1120px);
+            }
+
+            main {
+                padding-top: 32px;
+            }
+
+            .app-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+                gap: 10px;
+            }
+
+            .app-card {
+                min-height: 230px;
+                padding-inline: 10px;
+            }
+
+            .app-logo-link {
+                width: 88px;
+                height: 88px;
+                flex-basis: 88px;
+                border-radius: 20px;
+            }
+
+            .promos {
+                grid-template-columns: 1fr;
+                margin-top: 44px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .app-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="shell topbar">
+        <a class="brand" href="index3.html" aria-label="ArtCraft home">
+            <span class="brand-mark" aria-hidden="true">A</span>
+            <span>ArtCraft</span>
+        </a>
+        <div class="top-actions">
+            <a class="top-link" href="https://github.com/storytold" target="_blank" rel="noopener noreferrer">Explore on GitHub ↗</a>
+            <button class="theme-toggle" id="theme-toggle" type="button" aria-label="Switch to light mode" title="Switch to light mode">
+                <svg class="moon-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M20.2 15.1A8.5 8.5 0 0 1 8.9 3.8 8.6 8.6 0 1 0 20.2 15.1Z" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"></path></svg>
+                <svg class="sun-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="4" stroke="currentColor" stroke-width="1.8"></circle><path d="M12 2v2m0 16v2M4.93 4.93l1.42 1.42m11.3 11.3 1.42 1.42M2 12h2m16 0h2M4.93 19.07l1.42-1.42m11.3-11.3 1.42-1.42" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"></path></svg>
+            </button>
+        </div>
+    </header>
+
+    <main class="shell">
+        <h1 class="page-title">ArtCraft Apps</h1>
+        <p class="intro">Creative tools for every kind of project.</p>
+        <p class="intro">Explore the ArtCraft apps. Launch an app right in your web browser, or or get the desktop version for your operating system from the GitHub releases page.</p>
+        <section aria-label="Find and filter apps">
+            <div class="search-wrap">
+                <svg class="search-icon" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                    <circle cx="10.8" cy="10.8" r="6.8" stroke="currentColor" stroke-width="1.7"></circle>
+                    <path d="m16 16 4.2 4.2" stroke="currentColor" stroke-width="1.7" stroke-linecap="round"></path>
+                </svg>
+                <input class="search" id="app-search" type="search" placeholder="Search apps..." autocomplete="off" aria-label="Search apps">
+            </div>
+            <div class="filters" role="group" aria-label="Filter apps by category">
+                <button class="filter" type="button" data-filter="all" aria-pressed="true">All</button>
+                <button class="filter" type="button" data-filter="creativity" aria-pressed="false">Creativity</button>
+                <button class="filter" type="button" data-filter="productivity" aria-pressed="false">Productivity</button>
+                <button class="filter" type="button" data-filter="utility" aria-pressed="false">Utility</button>
+                <button class="filter" type="button" data-filter="tools" aria-pressed="false">Tools</button>
+                <button class="filter" type="button" data-filter="others" aria-pressed="false">Others</button>
+            </div>
+            <p class="results-note" id="results-note" aria-live="polite">Showing all 13 apps</p>
+        </section>
+
+        <section class="app-grid" id="app-grid" aria-label="ArtCraft apps">
+            <article class="app-card" data-app="photocraft" data-category="creativity" data-version="0.16.0">
+                <a class="app-logo-link" href="photocraft/photocraft-web-0.16.0/index.html" aria-label="Launch PhotoCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/photocraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">PhotoCraft</h2><span class="app-version">v0.16.0</span>
+                <div class="app-actions"><a class="button" href="photocraft/photocraft-web-0.16.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/photocraft/releases/tag/v0.16.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get PhotoCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="vectorcraft" data-category="creativity" data-version="0.17.0">
+                <a class="app-logo-link" href="vectorcraft/vectorcraft-web-0.17.0/index.html" aria-label="Launch VectorCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/vectorcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">VectorCraft</h2><span class="app-version">v0.17.0</span>
+                <div class="app-actions"><a class="button" href="vectorcraft/vectorcraft-web-0.17.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/vectorcraft/releases/tag/v0.17.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get VectorCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="filmcraft" data-category="creativity" data-version="0.13.0">
+                <a class="app-logo-link" href="filmcraft/filmcraft-web-0.13.0/index.html" aria-label="Launch FilmCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/filmcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">FilmCraft</h2><span class="app-version">v0.13.0</span>
+                <div class="app-actions"><a class="button" href="filmcraft/filmcraft-web-0.13.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/filmcraft/releases/tag/v0.13.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get FilmCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="lightcraft" data-category="creativity" data-version="0.14.0">
+                <a class="app-logo-link" href="lightcraft/lightcraft-web-0.14.0/index.html" aria-label="Launch LightCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/lightcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">LightCraft</h2><span class="app-version">v0.14.0</span>
+                <div class="app-actions"><a class="button" href="lightcraft/lightcraft-web-0.14.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/lightcraft/releases/tag/v0.14.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get LightCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="pdfcraft" data-category="utility" data-version="0.14.0">
+                <a class="app-logo-link" href="pdfcraft/pdfcraft-web-0.14.0/index.html" aria-label="Launch PDFCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/pdfcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">PDFCraft</h2><span class="app-version">v0.14.0</span>
+                <div class="app-actions"><a class="button" href="pdfcraft/pdfcraft-web-0.14.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/pdfcraft/releases/tag/v0.14.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get PDFCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="effectcraft" data-category="creativity" data-version="0.17.0">
+                <a class="app-logo-link" href="effectcraft/effectcraft-web-0.17.0/index.html" aria-label="Launch EffectCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/effectcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">EffectCraft</h2><span class="app-version">v0.17.0</span>
+                <div class="app-actions"><a class="button" href="effectcraft/effectcraft-web-0.17.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/effectcraft/releases/tag/v0.17.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get EffectCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="designcraft" data-category="creativity" data-version="0.13.0">
+                <a class="app-logo-link" href="designcraft/designcraft-web-0.13.0/index.html" aria-label="Launch DesignCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/designcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">DesignCraft</h2><span class="app-version">v0.13.0</span>
+                <div class="app-actions"><a class="button" href="designcraft/designcraft-web-0.13.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/designcraft/releases/tag/v0.13.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get DesignCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="figcraft" data-category="creativity" data-version="0.11.2">
+                <a class="app-logo-link" href="figcraft/figcraft-web-0.11.2/index.html" aria-label="Launch FigCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/figcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">FigCraft</h2><span class="app-version">v0.11.2</span>
+                <div class="app-actions"><a class="button" href="figcraft/figcraft-web-0.11.2/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/figcraft/releases/tag/v0.11.2#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get FigCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="wordcraft" data-category="productivity" data-version="0.11.0">
+                <a class="app-logo-link" href="wordcraft/wordcraft-web-0.11.0/index.html" aria-label="Launch WordCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/wordcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">WordCraft</h2><span class="app-version">v0.11.0</span>
+                <div class="app-actions"><a class="button" href="wordcraft/wordcraft-web-0.11.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/wordcraft/releases/tag/v0.11.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get WordCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="soundcraft" data-category="others" data-version="0.13.1">
+                <a class="app-logo-link" href="soundcraft/soundcraft-web-0.13.1/index.html" aria-label="Launch SoundCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/soundcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">SoundCraft</h2><span class="app-version">v0.13.1</span>
+                <div class="app-actions"><a class="button" href="soundcraft/soundcraft-web-0.13.1/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/soundcraft/releases/tag/v0.13.1#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get SoundCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="deckcraft" data-category="productivity" data-version="0.11.1">
+                <a class="app-logo-link" href="deckcraft/deckcraft-web-0.11.1/index.html" aria-label="Launch DeckCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/deckcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">DeckCraft</h2><span class="app-version">v0.11.1</span>
+                <div class="app-actions"><a class="button" href="deckcraft/deckcraft-web-0.11.1/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/deckcraft/releases/tag/v0.11.1#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get DeckCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="cadcraft" data-category="tools" data-version="0.13.0">
+                <a class="app-logo-link" href="cadcraft/cadcraft-web-0.13.0/index.html" aria-label="Launch CADCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/cadcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">CADCraft</h2><span class="app-version">v0.13.0</span>
+                <div class="app-actions"><a class="button" href="cadcraft/cadcraft-web-0.13.0/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/cadcraft/releases/tag/v0.13.0#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get CADCraft for your operating system">Get ↗</a></div>
+            </article>
+            <article class="app-card" data-app="gridcraft" data-category="productivity" data-version="0.12.1">
+                <a class="app-logo-link" href="gridcraft/gridcraft-web-0.12.1/index.html" aria-label="Launch GridCraft"><img class="app-icon" src="https://getartcraft.com/images/apps/gridcraft/icon.webp" alt="" loading="lazy"></a>
+                <h2 class="app-name">GridCraft</h2><span class="app-version">v0.12.1</span>
+                <div class="app-actions"><a class="button" href="gridcraft/gridcraft-web-0.12.1/index.html">Launch</a><a class="button button-get" href="https://github.com/storytold/gridcraft/releases/tag/v0.12.1#:~:text=Assets" target="_blank" rel="noopener noreferrer" aria-label="Get GridCraft for your operating system">Get ↗</a></div>
+            </article>
+        </section>
+
+        <section class="promos" aria-label="More from ArtCraft">
+            <article class="promo">
+                <p class="promo-label">Build your next chapter</p>
+                <img class="promo-logo" src="https://careerzen.com/static/images/menu-logo.svg" alt="CareerZen logo">
+                <h2>CareerZen</h2>
+                <p class="promo-copy">Everything you need to get hired! Bring focus and momentum to your career journey with AI resume building, smart job matching, and application tracking in one place.</p>
+                <a class="promo-link" href="https://careerzen.com" target="_blank" rel="noopener noreferrer">Discover CareerZen ↗</a>
+            </article>
+            <article class="promo">
+                <p class="promo-label">A smarter data workflow</p>
+                <img class="promo-logo promo-logo-rosetta" src="https://rosettadb.io/assets/images/rosettadbt/logo-white.svg" alt="Rosetta DBT Studio logo">
+                <h2>Rosetta DBT Studio</h2>
+                <p class="promo-copy">The data engineer's toolkit for the age of AI. Explore a focused workspace for dbt development.</p>
+                <a class="promo-link" href="https://rosettadb.io" target="_blank" rel="noopener noreferrer">Explore Rosetta DBT Studio ↗</a>
+            </article>
+        </section>
+    </main>
+
+    <footer class="shell">© Kukushi Meveçka · Open Source for the greater good!</footer>
+
+    <script>
+        const cards = [...document.querySelectorAll(".app-card")];
+        const filters = [...document.querySelectorAll(".filter")];
+        const search = document.querySelector("#app-search");
+        const resultsNote = document.querySelector("#results-note");
+        const themeToggle = document.querySelector("#theme-toggle");
+        let selectedCategory = "all";
+
+        themeToggle.addEventListener("click", () => {
+            const nextTheme = document.documentElement.dataset.theme === "light"
+                ? "dark"
+                : "light";
+            document.documentElement.dataset.theme = nextTheme;
+            const nextLabel = `Switch to ${nextTheme === "light" ? "dark" : "light"} mode`;
+            themeToggle.setAttribute("aria-label", nextLabel);
+            themeToggle.setAttribute("title", nextLabel);
+        });
+
+        function updateCards() {
+            const query = search.value.trim().toLocaleLowerCase();
+            let matchCount = 0;
+
+            for (const card of cards) {
+                const categoryMatches = selectedCategory === "all" ||
+                    card.dataset.category === selectedCategory;
+                const searchMatches = !query ||
+                    `${card.dataset.app} ${card.querySelector(".app-name").textContent} ${card.dataset.category}`
+                        .toLocaleLowerCase()
+                        .includes(query);
+
+                card.classList.toggle("is-category-dimmed", !categoryMatches);
+                card.classList.toggle("is-search-dimmed", Boolean(query) && !searchMatches);
+                card.classList.toggle("is-search-match", Boolean(query) && searchMatches);
+
+                if (categoryMatches && searchMatches) {
+                    matchCount += 1;
+                }
+            }
+
+            if (query) {
+                resultsNote.textContent = `${matchCount} matching ${matchCount === 1 ? "app" : "apps"}`;
+            } else if (selectedCategory === "all") {
+                resultsNote.textContent = `Showing all ${cards.length} apps`;
+            } else {
+                const categoryName = filters.find(
+                    (filter) => filter.dataset.filter === selectedCategory
+                ).textContent;
+                resultsNote.textContent = `${matchCount} ${categoryName.toLowerCase()} ${matchCount === 1 ? "app" : "apps"}`;
+            }
+        }
+
+        for (const filter of filters) {
+            filter.addEventListener("click", () => {
+                selectedCategory = filter.dataset.filter;
+                for (const button of filters) {
+                    button.setAttribute("aria-pressed", String(button === filter));
+                }
+                updateCards();
+            });
+        }
+
+        search.addEventListener("input", updateCards);
+    </script>
+</body>
+</html>
