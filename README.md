@@ -29,14 +29,18 @@ Requirements: Python 3 and network access to the GitHub API and release assets.
 python3 autocraft.py
 ```
 
-The generated site is written to `/tmp/artcraft`. Once the updater finishes, serve it locally:
+The generated site is written to `output/`. The directory can be overridden with the `ARTCRAFT_WEB_ROOT` environment variable. Once the updater finishes, serve it locally:
 
 ```bash
-cd /tmp/artcraft
+cd output
 python3 -m http.server 8000
 ```
 
 Open [http://localhost:8000](http://localhost:8000) in a browser. Stop the local server with `Ctrl+C`.
+
+## Daily deployment
+
+The GitHub Actions workflow at `.github/workflows/daily-build.yml` runs daily at 04:00 UTC and can also be started manually. It restores the previous `output/` cache, runs `autocraft.py` to download new app releases when needed and update the catalog, then publishes `output/` to GitHub Pages.
 
 ## Project files
 
