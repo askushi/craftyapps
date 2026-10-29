@@ -8,7 +8,7 @@ import zipfile
 from pathlib import Path
 
 # --- Configuration ---
-WEB_ROOT = Path("/tmp/artcraft")
+WEB_ROOT = Path(os.environ.get("ARTCRAFT_WEB_ROOT", Path(__file__).with_name("output"))).resolve()
 INDEX_TEMPLATE = Path(__file__).with_name("index.html.template")
 GITHUB_ORG = "storytold"
 APPS = [
@@ -58,8 +58,17 @@ def update_app(app_name):
     app_dir = WEB_ROOT / app_name
     version_file = app_dir / ".version"
 
-    # Check if we already have this version extracted
-    if version_file.exists() and version_file.read_text().strip() == tag_name:
+    # Check that the cached version still has its web entry point.
+    cached_indexes = [
+        path for path in app_dir.rglob("index.html")
+        if path.is_file()
+        and any(part.endswith(f"-{tag_name}") for part in path.relative_to(app_dir).parts)
+    ] if app_dir.is_dir() else []
+    if (
+        version_file.exists()
+        and version_file.read_text().strip() == tag_name
+        and len(cached_indexes) == 1
+    ):
         print(f"[{app_name}] Already up to date (v{tag_name}).")
         return tag_name
 
@@ -86,13 +95,14 @@ def update_index_html(versions):
     index_file = WEB_ROOT / "index.html"
     content = INDEX_TEMPLATE.read_text()
 
-    app_names = set(re.findall(r'<a\s+href="([^/"]+)/index\.html"', content))
-    for app in app_names:
+    for app in APPS:
         app_dir = WEB_ROOT / app
         version_file = app_dir / ".version"
         version = versions.get(app)
         if not version and version_file.exists():
             version = version_file.read_text().strip()
+        if not version:
+            raise RuntimeError(f"[{app}] No installed version is available for the catalog.")
 
         candidates = [
             path for path in app_dir.rglob("index.html")
@@ -107,57 +117,60 @@ def update_index_html(versions):
                 candidates = version_candidates
 
         if len(candidates) != 1:
-            print(f"[{app}] Expected one installed index.html, found {len(candidates)}; leaving template link unchanged.")
-            continue
+            raise RuntimeError(
+                f"[{app}] Expected one installed index.html for v{version}, found {len(candidates)}."
+            )
 
         href = html.escape(candidates[0].relative_to(WEB_ROOT).as_posix(), quote=True)
-        link_pattern = re.compile(
-            rf'(<a\s+href="){re.escape(app)}/index\.html(")([^>]*)>(.*?)</a>',
+        card_pattern = re.compile(
+            rf'(<article\b[^>]*\bdata-app="{re.escape(app)}"[^>]*>)(.*?)</article>',
             flags=re.IGNORECASE | re.DOTALL
         )
 
-        def update_link(match):
-            attributes = match.group(3)
-            card_content = match.group(4)
-            if version:
-                version_attributes = (
-                    f' data-app="{html.escape(app, quote=True)}"'
-                    f' data-version="{html.escape(version, quote=True)}"'
-                )
-                attributes = re.sub(
-                    r'\sdata-(?:app|version)="[^"]*"',
-                    '',
-                    attributes,
-                    flags=re.IGNORECASE
-                )
-                attributes += version_attributes
-                version_badge = (
-                    f'<span class="app-version">v{html.escape(version)}</span>'
-                )
-                badge_pattern = re.compile(
-                    r'<span\s+class="app-version">.*?</span>',
-                    flags=re.IGNORECASE | re.DOTALL
-                )
-                if badge_pattern.search(card_content):
-                    card_content = badge_pattern.sub(version_badge, card_content)
-                else:
-                    app_name_pattern = re.compile(
-                        r'(^[ \t]*)(<span\s+class="app-name">.*?</span>)',
-                        flags=re.IGNORECASE | re.DOTALL | re.MULTILINE
-                    )
-                    card_content, matches = app_name_pattern.subn(
-                        lambda name_match: (
-                            f'{name_match.group(1)}{name_match.group(2)}\n'
-                            f'{name_match.group(1)}{version_badge}'
-                        ),
-                        card_content,
-                        count=1
-                    )
-                    if not matches:
-                        print(f"[{app}] No app name found in its index card.")
-            return f'{match.group(1)}{href}{match.group(2)}{attributes}>{card_content}</a>'
+        card_match = card_pattern.search(content)
+        if not card_match:
+            raise RuntimeError(f"[{app}] No matching app card found in the template.")
 
-        content = link_pattern.sub(update_link, content)
+        opening_tag = card_match.group(1)
+        version_pattern = re.compile(r'(\bdata-version=")[^"]*(")', re.IGNORECASE)
+        opening_tag, version_matches = version_pattern.subn(
+            lambda match: f'{match.group(1)}{html.escape(version, quote=True)}{match.group(2)}',
+            opening_tag,
+            count=1
+        )
+        if not version_matches:
+            raise RuntimeError(f"[{app}] App card is missing its data-version attribute.")
+
+        card_content = card_match.group(2)
+        badge_pattern = re.compile(
+            r'<span\s+class="app-version">.*?</span>',
+            flags=re.IGNORECASE | re.DOTALL
+        )
+        card_content, badge_matches = badge_pattern.subn(
+            f'<span class="app-version">v{html.escape(version)}</span>',
+            card_content,
+            count=1
+        )
+        if not badge_matches:
+            raise RuntimeError(f"[{app}] App card is missing its version badge.")
+
+        link_pattern = re.compile(
+            rf'(<a\b[^>]*\bhref="){re.escape(app)}/[^"]*/index\.html(")',
+            flags=re.IGNORECASE
+        )
+        card_content, link_matches = link_pattern.subn(
+            lambda match: f"{match.group(1)}{href}{match.group(2)}",
+            card_content
+        )
+        if not link_matches:
+            raise RuntimeError(f"[{app}] No app launch links found in the template.")
+
+        updated_card = f"{opening_tag}{card_content}</article>"
+        content = (
+            content[:card_match.start()]
+            + updated_card
+            + content[card_match.end():]
+        )
 
     index_file.write_text(content)
     print(f"Generated {index_file} from {INDEX_TEMPLATE}.")
