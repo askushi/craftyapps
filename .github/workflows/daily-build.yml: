@@ -1,1 +1,60 @@
+name: Daily Data Fetch and Deploy
 
+on:
+  schedule:
+    # Runs at 04:00 UTC every day
+    - cron: '0 4 * * *'
+  workflow_dispatch: # Allows manual runs from the GitHub "Actions" tab
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: 'pages'
+  cancel-in-progress: true
+
+jobs:
+  build-and-deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: |
+          if [ -f requirements.txt ]; then pip install -r requirements.txt; fi
+
+      # Optional: Cache the version/data folder across runs so you only fetch on increments
+      - name: Cache version state
+        uses: actions/cache@v4
+        with:
+          path: .state_cache
+          key: app-state-${{ runner.os }}
+
+      - name: Run Python script
+        run: |
+          python main.py
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # Change this to the folder containing your generated index.html and sub-folders
+          path: './output'
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
