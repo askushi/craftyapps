@@ -3,6 +3,7 @@ import html
 import json
 import os
 import re
+import shutil
 import urllib.request
 import zipfile
 from pathlib import Path
@@ -175,8 +176,17 @@ def update_index_html(versions):
     index_file.write_text(content)
     print(f"Generated {index_file} from {INDEX_TEMPLATE}.")
 
+def copy_brand_assets():
+    source_dir = Path(__file__).with_name("media")
+    destination_dir = WEB_ROOT / "media"
+    destination_dir.mkdir(parents=True, exist_ok=True)
+
+    for filename in ("craftyapps_logo.svg", "craftyapps_logo_dark.svg"):
+        shutil.copy2(source_dir / filename, destination_dir / filename)
+
 def main():
     WEB_ROOT.mkdir(parents=True, exist_ok=True)
+    copy_brand_assets()
     installed_versions = {}
 
     for app in APPS:
