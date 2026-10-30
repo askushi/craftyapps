@@ -25,6 +25,7 @@ HEADERS = {
 # if GITHUB_TOKEN:
 #     HEADERS["Authorization"] = f"Bearer {GITHUB_TOKEN}"
 
+
 def fetch_latest_release(app_name):
     url = f"https://api.github.com/repos/{GITHUB_ORG}/{app_name}/releases/latest"
     req = urllib.request.Request(url, headers=HEADERS)
@@ -35,9 +36,22 @@ def fetch_latest_release(app_name):
         print(f"[{app_name}] Failed to fetch release info: {e}")
         return None
 
+
 def update_app(app_name):
+    app_dir = WEB_ROOT / app_name
+    version_file = app_dir / ".version"
+
+    # Prefer the last known-good version if the upstream release is temporarily unavailable.
+    if version_file.exists():
+        cached_version = version_file.read_text().strip()
+    else:
+        cached_version = None
+
     release_info = fetch_latest_release(app_name)
     if not release_info:
+        if cached_version:
+            print(f"[{app_name}] Using cached version {cached_version} because no release was available.")
+            return cached_version
         return None
 
     tag_name = release_info.get("tag_name", "").lstrip("v")
@@ -53,12 +67,11 @@ def update_app(app_name):
 
     if not target_asset:
         print(f"[{app_name}] No matching WASM zip asset found in release {tag_name}")
+        if cached_version:
+            print(f"[{app_name}] Retaining cached version {cached_version}.")
+            return cached_version
         return None
 
-    app_dir = WEB_ROOT / app_name
-    version_file = app_dir / ".version"
-
-    # Check that the cached version still has its web entry point.
     cached_indexes = [
         path for path in app_dir.rglob("index.html")
         if path.is_file()
@@ -77,19 +90,34 @@ def update_app(app_name):
 
     print(f"[{app_name}] Downloading v{tag_name} from {download_url}...")
     req = urllib.request.Request(download_url, headers=HEADERS)
-    with urllib.request.urlopen(req) as resp, open(zip_path, "wb") as f:
-        f.write(resp.read())
+    try:
+        with urllib.request.urlopen(req) as resp, open(zip_path, "wb") as f:
+            f.write(resp.read())
+    except Exception as exc:
+        print(f"[{app_name}] Download failed: {exc}")
+        if cached_version:
+            print(f"[{app_name}] Keeping cached version {cached_version}.")
+            return cached_version
+        return None
 
     # Extract archive into target directory
     app_dir.mkdir(parents=True, exist_ok=True)
-    with zipfile.ZipFile(zip_path, 'r') as zip_ref:
-        zip_ref.extractall(app_dir)
+    try:
+        with zipfile.ZipFile(zip_path, 'r') as zip_ref:
+            zip_ref.extractall(app_dir)
+    except Exception as exc:
+        print(f"[{app_name}] Extraction failed: {exc}")
+        if cached_version:
+            print(f"[{app_name}] Keeping cached version {cached_version}.")
+            return cached_version
+        return None
 
     # Save installed version tag
     version_file.write_text(tag_name)
-    zip_path.unlink(missing_ok=True) # Clean up downloaded archive
+    zip_path.unlink(missing_ok=True)  # Clean up downloaded archive
     print(f"[{app_name}] Successfully updated to v{tag_name}.")
     return tag_name
+
 
 def update_index_html(versions):
     index_file = WEB_ROOT / "index.html"
@@ -102,7 +130,8 @@ def update_index_html(versions):
         if not version and version_file.exists():
             version = version_file.read_text().strip()
         if not version:
-            raise RuntimeError(f"[{app}] No installed version is available for the catalog.")
+            print(f"[{app}] No installed version is available; leaving template card unchanged.")
+            continue
 
         candidates = [
             path for path in app_dir.rglob("index.html")
@@ -117,9 +146,11 @@ def update_index_html(versions):
                 candidates = version_candidates
 
         if len(candidates) != 1:
-            raise RuntimeError(
-                f"[{app}] Expected one installed index.html for v{version}, found {len(candidates)}."
+            print(
+                f"[{app}] Expected one installed index.html for v{version}, found {len(candidates)}. "
+                "Skipping catalog update for this app."
             )
+            continue
 
         href = html.escape(candidates[0].relative_to(WEB_ROOT).as_posix(), quote=True)
         card_pattern = re.compile(
@@ -129,7 +160,8 @@ def update_index_html(versions):
 
         card_match = card_pattern.search(content)
         if not card_match:
-            raise RuntimeError(f"[{app}] No matching app card found in the template.")
+            print(f"[{app}] No matching app card found in the template.")
+            continue
 
         opening_tag = card_match.group(1)
         version_pattern = re.compile(r'(\bdata-version=")[^"]*(")', re.IGNORECASE)
@@ -139,7 +171,8 @@ def update_index_html(versions):
             count=1
         )
         if not version_matches:
-            raise RuntimeError(f"[{app}] App card is missing its data-version attribute.")
+            print(f"[{app}] App card is missing its data-version attribute.")
+            continue
 
         card_content = card_match.group(2)
         badge_pattern = re.compile(
@@ -152,7 +185,8 @@ def update_index_html(versions):
             count=1
         )
         if not badge_matches:
-            raise RuntimeError(f"[{app}] App card is missing its version badge.")
+            print(f"[{app}] App card is missing its version badge.")
+            continue
 
         link_pattern = re.compile(
             rf'(<a\b[^>]*\bhref="){re.escape(app)}/[^"]*/index\.html(")',
@@ -163,7 +197,8 @@ def update_index_html(versions):
             card_content
         )
         if not link_matches:
-            raise RuntimeError(f"[{app}] No app launch links found in the template.")
+            print(f"[{app}] No app launch links found in the template.")
+            continue
 
         updated_card = f"{opening_tag}{card_content}</article>"
         content = (
@@ -175,14 +210,18 @@ def update_index_html(versions):
     index_file.write_text(content)
     print(f"Generated {index_file} from {INDEX_TEMPLATE}.")
 
+
 def main():
     WEB_ROOT.mkdir(parents=True, exist_ok=True)
     installed_versions = {}
 
     for app in APPS:
-        installed_versions[app] = update_app(app)
+        version = update_app(app)
+        if version is not None:
+            installed_versions[app] = version
 
     update_index_html(installed_versions)
+
 
 if __name__ == "__main__":
     main()
