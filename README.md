@@ -1,10 +1,12 @@
 # AutoCraft --> ArtCraft Apps
 
+[[./media/crafty_phoenix.mp4]]
+
 [ArtCraft](getartcraft.com) is an open-source ecosystem of creative tools and software designed as a subscription-free alternative to traditional creative software suites and cloud-based AI tools.  It's built around the philosophy of avoiding recurring subscriptions, middlemen, or platform lock-in.  ArtCraft is releasing apps at a very fast pace, and if you want to test the latest version without first installing each app, then this is for you.
 
 AutoCraft generates an up-todate web catalog for a collection of latest WASM builds of the ArtCraft apps that you can run entirely within your web browser--without installing anything. It provides links to launch each app in the browser and to download desktop releases.
 
-![ArtCraft Apps catalog](./image.png)
+![ArtCraft Apps catalog](./media/image.png)
 
 ## Features
 

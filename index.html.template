@@ -71,21 +71,28 @@
         .brand {
             display: inline-flex;
             align-items: center;
-            gap: 10px;
             font-weight: 750;
             letter-spacing: .02em;
             text-decoration: none;
+            color: var(--text);
         }
 
-        .brand-mark {
-            display: grid;
-            width: 32px;
-            height: 32px;
-            place-items: center;
-            border-radius: 10px;
-            background: linear-gradient(135deg, var(--cyan), var(--violet));
-            color: #10152a;
-            font-weight: 900;
+        .brand-logo {
+            display: block;
+            width: 136px;
+            height: auto;
+        }
+
+        .brand-logo-dark {
+            display: none;
+        }
+
+        :root:not([data-theme="light"]) .brand-logo-light {
+            display: none;
+        }
+
+        :root:not([data-theme="light"]) .brand-logo-dark {
+            display: block;
         }
 
         .top-link {
@@ -523,9 +530,9 @@
 </head>
 <body>
     <header class="shell topbar">
-        <a class="brand" href="index3.html" aria-label="ArtCraft home">
-            <span class="brand-mark" aria-hidden="true">A</span>
-            <span>ArtCraft</span>
+        <a class="brand" href="index.html" aria-label="CraftyApps Home">
+            <img class="brand-logo brand-logo-light" src="media/craftyapps_logo.svg" alt="CraftyApps">
+            <img class="brand-logo brand-logo-dark" src="media/craftyapps_logo_dark.svg" alt="" aria-hidden="true">
         </a>
         <div class="top-actions">
             <a class="top-link" href="https://github.com/storytold" target="_blank" rel="noopener noreferrer">Explore on GitHub ↗</a>
