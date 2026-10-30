@@ -166,6 +166,23 @@ def update_index_html(versions):
         if not link_matches:
             raise RuntimeError(f"[{app}] No app launch links found in the template.")
 
+        release_url = html.escape(
+            f"https://github.com/{GITHUB_ORG}/{app}/releases/tag/v{version}#:~:text=Assets",
+            quote=True
+        )
+        get_link_pattern = re.compile(
+            r'(<a\b(?=[^>]*\bclass="[^"]*\bbutton-get\b[^"]*")[^>]*\bhref=")[^"]*(")',
+            flags=re.IGNORECASE | re.DOTALL
+        )
+        card_content, get_link_matches = get_link_pattern.subn(
+            lambda match: f"{match.group(1)}{release_url}{match.group(2)}",
+            card_content
+        )
+        if get_link_matches != 1:
+            raise RuntimeError(
+                f"[{app}] Expected one Get link in the template, found {get_link_matches}."
+            )
+
         updated_card = f"{opening_tag}{card_content}</article>"
         content = (
             content[:card_match.start()]
